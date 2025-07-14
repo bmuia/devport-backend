@@ -6,3 +6,5 @@ __pycache__
 *.pyc
 *.pyo
 
+/**/migrations/
+!/**/migrations/__init.py__
