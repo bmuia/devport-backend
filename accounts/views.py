@@ -7,6 +7,9 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth import get_user_model
 from django.shortcuts import redirect
 
+from django.shortcuts import redirect
+from urllib.parse import urlencode
+
 from .serializers import RegistrationSerializer
 from .social_providers import (
     get_google_auth_url,
@@ -80,17 +83,17 @@ class GoogleCallbackView(APIView):
             return Response({"error": "Email not found in Google response"}, status=400)
 
         user, _ = User.objects.update_or_create(
-            email=email,
-            defaults={"username": email.split("@")[0], "first_name": name}
+            email=email
         )
 
         refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
 
-        return Response({
+        # Redirect to frontend with tokens in URL
+        query_params = urlencode({
+            "access": str(access),
             "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "user": {
-                "email": user.email,
-                "name": user.first_name
-            }
+            "email": email,
+            "name": name
         })
+        return redirect(f"http://localhost:3000/oauth/callback?{query_params}")
